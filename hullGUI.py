@@ -2,6 +2,7 @@
 # if using python 2, swap the next two lines
 # from Tkinter import *
 from tkinter import *
+#in hullHUI.py
 import copy
 from convexhull import computeHull
 
@@ -14,10 +15,10 @@ def addPoint(event):
 	points.append((event.x,event.y))
 
 def drawPoint(canvas,x,y):
-	r = 4
-	#id = canvas.create_oval(x-r,y-r,x+r,y+r)
-	string = "(" + str(x) + "," + str(y) + ")";
-	id = canvas.create_text(x ,y, text = string);
+	r = 1
+	id = canvas.create_oval(x-r,y-r,x+r,y+r)
+	xyStr = "(" + str(x) + ", " + str(y) + ")"
+	id = canvas.create_text(x, y, text=xyStr)
 	#id = canvas.create_image((x,y),image=ram,state=NORMAL)
 	return id
 

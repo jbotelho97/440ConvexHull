@@ -1,5 +1,7 @@
 import math
 import sys
+import random
+from hullGUI import *
 
 EPSILON = sys.float_info.epsilon
 
@@ -33,7 +35,7 @@ and zero if the points are collinear.
 '''
 def triangleArea(a, b, c):
 	return (a[0]*b[1] - a[1]*b[0] + a[1]*c[0] \
-                - a[0]*c[1] + b[0]*c[1] - c[0]*b[1]) / 2.0;
+                - a[0]*c[1] + b[0]*c[1] - c[0]*b[1]) / 2.0
 
 '''
 Given three points a,b,c,
@@ -42,7 +44,7 @@ a,b,c represents a clockwise sequence
 (subject to floating-point precision)
 '''
 def cw(a, b, c):
-	return triangleArea(a,b,c) < EPSILON;
+	return triangleArea(a,b,c) < EPSILON
 '''
 Given three points a,b,c,
 returns True if and only if 
@@ -50,7 +52,7 @@ a,b,c represents a counter-clockwise sequence
 (subject to floating-point precision)
 '''
 def ccw(a, b, c):
-	return triangleArea(a,b,c) > EPSILON;
+	return triangleArea(a,b,c) > EPSILON
 
 '''
 Given three points a,b,c,
@@ -79,33 +81,55 @@ Replace the implementation of computeHull with a correct computation of the conv
 using the divide-and-conquer algorithm
 '''
 def computeHull(points):
-	p = naiveHull(points);
-	return p;
-	#return points;
 
+	#Sort by x value
+	sorted(points , key=lambda k: [k[0], k[1]])
+	return computeHullHelper(points)
 
-#Simple naive brute force sort when n = 5
-def naiveHull(points):
-	p = points;
-	clockwiseSort(p);
+	
 
-	hull = [];
+#Helper for computeHull
+def computeHullHelper(points):
+	if len(points) > 5:
 
-	for i in range(len(p)):
-		j = (i + 1) % len(p);
-		for j in range(len(p)):
-			k = (j + 1) % len(p);
-			test = 0
-			for c in range(len(p)):
-				if k == i or k == j:
-					k = (k + 1) % len(p);
-					continue
-				comp = triangleArea(p[i], p[j], p[k])
-				if comp >= 0:
-					test += 1
-				else:
-					test -= 1;
-				k = (k + 1) % len(p);
-			if abs(test) == (len(p) - 2):
-				hull.append(p[i])
-	return hull;
+		#Recurse on halves
+		half = len(points)//2
+		p1 = computeHull(points[:half])
+		p2 = computeHull(points[half:])
+
+		#Merge
+		return mergeHull(p1, p2)
+
+	else:
+		return naiveHull(points)
+
+#Merge Hulls
+def mergeHull():
+
+	intercept = yint(p1, p2, canvas_width/2, 0, canvas_hight)
+
+	i = 1
+	j = 1
+	while (yint(p1[i],   p2[j+1], canvas_width/2, 0, canvas_hight) >
+		   yint(p1[i],   p2[j],   canvas_width/2, 0, canvas_hight) or
+		   yint(p1[i-1], p2[j],   canvas_width/2, 0, canvas_hight) >
+		   yint(p1[i],   p2[j],   canvas_width/2, 0, canvas_hight)):
+
+		if yint(p1[i],   p2[j+1], canvas_width/2, 0, canvas_hight) >
+		   yint(p1[i],   p2[j],   canvas_width/2, 0, canvas_hight): #move right finger clockwise
+			j = j+1 % len(p1)
+		else:
+			i = i - 1 % len(p2)
+	return #something
+
+#Naive Convex Hull Alg
+def naiveComputeHUll(points):
+	return 0
+
+def maxPoint(points):
+	xmax = max(p[0] for p in points)
+	return xmax
+
+def minPoint(points):
+	xmin = min(p[0] for p in points)
+	return xmin
