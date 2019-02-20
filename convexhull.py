@@ -79,10 +79,148 @@ Replace the implementation of computeHull with a correct computation of the conv
 using the divide-and-conquer algorithm
 '''
 def computeHull(points):
-	p = naiveHull(points);
-	return p;
+
+	if len(points) <= 5:
+		return naiveHull(points)
+
+	left = []
+	right = []
+
+	points = insertion_sort(points)
+
+	split = int(len(points) / 2)
+
+	for i in range(split):
+		left.append(points[i])
+
+	for j in range(split, len(points)):
+		right.append(points[j])
+
+	left = computeHull(left)
+	right = computeHull(right)
+
+	return mergeHulls(left, right)
+
+	# p = naiveHull(points);
+	# return p;
 	#return points;
 
+def insertion_sort(arr):
+	for i in range(len(arr)):
+		cursor = arr[i]
+		pos = i
+
+		while pos > 0 and arr[pos - 1][0] > cursor[0]:
+			# Swap the number down the list
+			arr[pos] = arr[pos - 1]
+			pos = pos - 1
+		# Break and do the final swap
+		arr[pos] = cursor
+
+	return arr
+
+def mergeHulls(left, right):
+
+	leftSize = len(left)
+	rightSize= len(right)
+
+	#Finding the furthest right value in the left list
+	leftMax = 0 #Maximum x-value of the left
+	li = 0 #Index of said maximum
+	for i in range(len(left)):
+		if left[i][0] > leftMax:
+			leftMax = left[i][0]
+			li = i
+
+	#Finding the furthest left value of the right list
+	rightMin = 1000  # Maximum x-value of the left
+	ri = 0  # Index of said maximum
+	for i in range(len(right)):
+		if right[i][0] < rightMin:
+			rightMin = right[i][0]
+			ri = i
+
+	divder = (leftMax + rightMin) / 2
+
+	#Uppoer Tangent
+	indexL = li
+	indexR = ri
+	done = False
+	upperT = yint(left[indexL], right[indexR], divder, 0, 800)
+	upperT = upperT[1]
+	while not done:
+		startR = indexR
+		startL = indexL
+		indexR = (indexR + 1) % rightSize
+		tempBound = yint(left[indexL], right[indexR], divder, 0, 800)
+		if upperT >= tempBound[1]:
+			upperT = tempBound[1]
+		else:
+			indexR = (indexR - 1) % rightSize
+
+		indexL = (indexL - 1) % leftSize
+		tempBound = yint(left[indexL], right[indexR], divder, 0, 800)
+		if upperT >= tempBound[1]:
+			upperT = tempBound[1]
+		else:
+			indexL = (indexL + 1) % leftSize
+
+		#End-Case: if the loop has gone through with no changes to the indeicies
+		if startL == indexL and startR == indexR:
+			done = True
+
+	upperL = indexL
+	upperR = indexR
+
+	#Lower Tangent
+	indexL = li
+	indexR = ri
+	done = False
+	lowerT = yint(left[indexL], right[indexR], divder, 0, 800)
+	lowerT = lowerT[1]
+	while not done:
+		startR = indexR
+		startL = indexL
+		indexR = (indexR - 1) % rightSize
+		tempBound = yint(left[indexL], right[indexR], divder, 0, 800)
+		if lowerT <= tempBound[1]:
+			lowerT = tempBound[1]
+		else:
+			indexR = (indexR + 1) % rightSize
+
+		indexL = (indexL + 1) % leftSize
+		tempBound = yint(left[indexL], right[indexR], divder, 0, 800)
+		if lowerT <= tempBound[1]:
+			lowerT = tempBound[1]
+		else:
+			indexL = (indexL - 1) % leftSize
+
+		# End-Case: if the loop has gone through with no changes to the indeicies
+		if startL == indexL and startR == indexR:
+			done = True
+
+	lowerL = indexL
+	lowerR = indexR
+
+	combinedHull = []
+
+	#Combining Lists
+	#left list
+	ind = upperL
+	combinedHull.append(left[upperL])
+	while ind != lowerL:
+		ind = (ind - 1) % leftSize
+		combinedHull.append(left[ind])
+	#right List
+	ind = lowerR
+	combinedHull.append(right[lowerR])
+	while ind != upperR:
+		ind = (ind - 1) % rightSize
+		combinedHull.append(right[ind])
+
+	clockwiseSort(combinedHull)
+
+	return combinedHull
 
 #Simple naive brute force sort when n = 5
 def naiveHull(points):
@@ -100,6 +238,8 @@ def naiveHull(points):
 				if k == i or k == j:
 					k = (k + 1) % len(p);
 					continue
+				# elif c == j or c == i:
+				# 	c = (c + 1) % len(p)
 				comp = triangleArea(p[i], p[j], p[k])
 				if comp >= 0:
 					test += 1
@@ -108,4 +248,5 @@ def naiveHull(points):
 				k = (k + 1) % len(p);
 			if abs(test) == (len(p) - 2):
 				hull.append(p[i])
+				break
 	return hull;
