@@ -1,5 +1,7 @@
 import math
 import sys
+from hypothesis import given
+import hypothesis.strategies as st
 
 EPSILON = sys.float_info.epsilon
 
@@ -46,7 +48,7 @@ a,b,c represents a clockwise sequence
 (subject to floating-point precision)
 '''
 def cw(a, b, c):
-	return triangleArea(a,b,c) < EPSILON;
+	return triangleArea(a,b,c) < -EPSILON;
 '''
 Given three points a,b,c,
 returns True if and only if 
@@ -83,14 +85,21 @@ Replace the implementation of computeHull with a correct computation of the conv
 using the divide-and-conquer algorithm
 '''
 def computeHull(points):
+	# points = insertion_sort(points)
+	# points = computeHelper(points)
+	points = naiveHull(points)
+	clockwiseSort(points)
+	return points
+
+def computeHelper(points):
 
 	if len(points) <= 5:
 		return naiveHull(points)
 
+	points = insertion_sort(points)
+
 	left = []
 	right = []
-
-	points = insertion_sort(points)
 
 	split = int(len(points) / 2)
 
@@ -100,14 +109,10 @@ def computeHull(points):
 	for j in range(split, len(points)):
 		right.append(points[j])
 
-	left = computeHull(left)
-	right = computeHull(right)
+	left = computeHelper(left)
+	right = computeHelper(right)
 
 	return mergeHulls(left, right)
-
-	# p = naiveHull(points);
-	# return p;
-	#return points;
 
 def insertion_sort(arr):
 	for i in range(len(arr)):
@@ -227,7 +232,9 @@ def mergeHulls(left, right):
 		ind = (ind - 1) % rightSize
 		combinedHull.append(right[ind])
 
-	clockwiseSort(combinedHull)
+	# combinedHull = clockwiseSort(combinedHull)
+
+#	print("Size: ", len(combinedHull), "\n")
 
 	return combinedHull
 
@@ -239,23 +246,49 @@ def naiveHull(points):
 	hull = [];
 
 	for i in range(len(p)):
-		j = (i + 1) % len(p);
-		for j in range(len(p)):
+		jStart = (i + 1) % len(p);
+		for j in range(jStart, len(p)):
 			k = (j + 1) % len(p);
 			test = 0
 			for c in range(len(p)):
 				if k == i or k == j:
 					k = (k + 1) % len(p);
 					continue
-				# elif c == j or c == i:
-				# 	c = (c + 1) % len(p)
-				comp = triangleArea(p[i], p[j], p[k])
-				if comp >= 0:
+				#comp = triangleArea(p[i], p[j], p[k])
+				colin = collinear(p[i], p[j], p[k])
+				clock = cw(p[i],p[j],p[k])
+				if clock:
 					test += 1
-				else:
+				elif not clock:
 					test -= 1;
+				else:
+					if test >= 0:
+						test += 1
+					else:
+						test -= 1
 				k = (k + 1) % len(p);
 			if abs(test) == (len(p) - 2):
 				hull.append(p[i])
 				break
 	return hull;
+
+def checkHull(hull, points):
+	points = naiveHull(points)
+	same = True
+	insertion_sort(points)
+	insertion_sort(hull)
+	assert(len(points) == len(hull))
+	for i in range(len(points)):
+		if hull[i][0] != points[i][0] or hull[i][1] != points[i][1]:
+			same = False
+	return same
+
+@given(
+    st.lists(st.tuples(st.integers(0,1000000), st.integers(0,1000000)), 3, None, None, True)
+)
+def test_hull(points):
+    hull = computeHull(points)
+    assert checkHull(hull, points)
+
+if __name__ == "__main__":
+    test_hull()
