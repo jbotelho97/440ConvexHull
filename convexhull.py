@@ -19,14 +19,14 @@ def yint(p1, p2, x, y3, y4):
 	if x1 == x2:
 		yr = ((y1 + y2) / 2)
 		xr = x1
-		return (xr, yr)
+		return yr
 	x3 = x
 	x4 = x
 	px = ((x1*y2 - y1*x2) * (x3 - x4) - (x1 - x2)*(x3*y4 - y3*x4)) / \
 		 float((x1 - x2)*(y3 - y4) - (y1 - y2)*(x3 - x4))
 	py = ((x1*y2 - y1*x2)*(y3-y4) - (y1 - y2)*(x3*y4 - y3*x4)) / \
 			float((x1 - x2)*(y3 - y4) - (y1 - y2)*(x3-x4))
-	return py
+	return int(py)
 
 '''
 Given three points a,b,c,
@@ -85,9 +85,12 @@ Replace the implementation of computeHull with a correct computation of the conv
 using the divide-and-conquer algorithm
 '''
 def computeHull(points):
+	# if len(points) > 25000:
+	# 	return 0
+	points = insertion_sort(points)
 	points = computeHelper(points)
 	# points = naiveHull(points)
-	clockwiseSort(points)
+	#clockwiseSort(points)
 	return points
 
 def computeHelper(points):
@@ -95,7 +98,7 @@ def computeHelper(points):
 	if len(points) <= 5:
 		return naiveHull(points)
 
-	points = insertion_sort(points)
+	# points = insertion_sort(points)
 
 	left = []
 	right = []
@@ -129,8 +132,15 @@ def insertion_sort(arr):
 
 def mergeHulls(left, right):
 
+	if len(left) == 0:
+		return right
+	if len(right) == 0:
+		return left
 	leftSize = len(left)
-	rightSize= len(right)
+	rightSize = len(right)
+
+	clockwiseSort(left)
+	clockwiseSort(right)
 
 	#Finding the furthest right value in the left list
 	leftMax = 0 #Maximum x-value of the left
@@ -152,76 +162,10 @@ def mergeHulls(left, right):
 
 	divder = (leftMax + rightMin) / 2 #Line L to calculate the y-intercept
 
-	# #Checking if edge points have the same x-value
-	# def compare(lefti, righti):
-	# 	return left[lefti] == right[righti]
-
-
-	# #Upoer Tangent
-	# indexL = li
-	# indexR = ri
-	# done = False
-	# upperT = yint(left[indexL], right[indexR], divder, 0, 800)
-	# upperT = upperT[1]
-	# while not done:
-	# 	startR = indexR
-	# 	startL = indexL
-	# 	indexR = (indexR + 1) % rightSize
-	# 	tempBound = yint(left[indexL], right[indexR], divder, 0, 800)
-	# 	if upperT >= tempBound[1]:
-	# 		upperT = tempBound[1]
-	# 	else:
-	# 		indexR = (indexR - 1) % rightSize
-	#
-	# 	indexL = (indexL - 1) % leftSize
-	# 	tempBound = yint(left[indexL], right[indexR], divder, 0, 800)
-	# 	if upperT >= tempBound[1]:
-	# 		upperT = tempBound[1]
-	# 	else:
-	# 		indexL = (indexL + 1) % leftSize
-	#
-	# 	#End-Case: if the loop has gone through with no changes to the indeicies
-	# 	if startL == indexL and startR == indexR:
-	# 		done = True
-	#
-	# upperL = indexL
-	# upperR = indexR
-	#
-	# #Lower Tangent
-	# indexL = li
-	# indexR = ri
-	# done = False
-	# lowerT = yint(left[indexL], right[indexR], divder, 0, 800)
-	# lowerT = lowerT[1]
-	# while not done:
-	# 	startR = indexR
-	# 	startL = indexL
-	# 	indexR = (indexR - 1) % rightSize
-	# 	tempBound = yint(left[indexL], right[indexR], divder, 0, 800)
-	# 	if lowerT <= tempBound[1]:
-	# 		lowerT = tempBound[1]
-	# 	else:
-	# 		indexR = (indexR + 1) % rightSize
-	#
-	# 	indexL = (indexL + 1) % leftSize
-	# 	tempBound = yint(left[indexL], right[indexR], divder, 0, 800)
-	# 	if lowerT <= tempBound[1]:
-	# 		lowerT = tempBound[1]
-	# 	else:
-	# 		indexL = (indexL - 1) % leftSize
-	#
-	# 	# End-Case: if the loop has gone through with no changes to the indeicies
-	# 	if startL == indexL and startR == indexR:
-	# 		done = True
-	#
-	# lowerL = indexL
-	# lowerR = indexR
-
 	#upper tangent
 	indexL = li
 	indexR = ri
-	clockwiseSort(left)
-	clockwiseSort(right)
+
 
 	while yint(left[indexL], right[(indexR + 1) % rightSize], divder, 0, 800) < yint(left[indexL], right[indexR], divder, 0, 800) or \
 			yint(left[(indexL - 1) % leftSize], right[indexR], divder, 0, 800) < yint(left[indexL], right[indexR], divder, 0, 800):
@@ -233,6 +177,19 @@ def mergeHulls(left, right):
 
 	upperL = indexL
 	upperR = indexR
+
+	indexL = li
+	indexR = ri
+
+	while yint(left[indexL], right[(indexR - 1) % rightSize], divder, 0, 800) > yint(left[indexL], right[indexR], divder, 0, 800) or \
+			yint(left[(indexL + 1) % leftSize], right[indexR], divder, 0, 800) > yint(left[indexL], right[indexR], divder, 0, 800):
+		if yint(left[indexL], right[(indexR - 1) % rightSize], divder, 0, 800) > yint(left[indexL], right[indexR], divder, 0, 800):
+			indexR = (indexR - 1) % rightSize
+		else:
+			indexL = (indexL + 1) % leftSize
+
+	lowerL = indexL
+	lowerR = indexR
 
 	combinedHull = []
 
@@ -252,7 +209,7 @@ def mergeHulls(left, right):
 
 	# combinedHull = clockwiseSort(combinedHull)
 
-#	print("Size: ", len(combinedHull), "\n")
+	# print("Size: ", len(combinedHull), "\n")
 
 	return combinedHull
 
@@ -273,7 +230,8 @@ def naiveHull(points):
 					k = (k + 1) % listl
 				cwR = cw(p[i], p[j], p[k])
 				if not cwR:
-					break
+					if not collinear(p[i], p[j], p[k]):
+						break
 				k = (k + 1) % listl
 			if cwR:
 				hull.append(p[i])
@@ -285,8 +243,8 @@ def naiveHull(points):
 def checkHull(hull, points):
 	points = naiveHull(points)
 	same = True
-	insertion_sort(points)
-	insertion_sort(hull)
+	points = insertion_sort(points)
+	hull = insertion_sort(hull)
 	assert(len(points) == len(hull))
 	for i in range(len(points)):
 		if hull[i][0] != points[i][0] or hull[i][1] != points[i][1]:
