@@ -87,7 +87,8 @@ using the divide-and-conquer algorithm
 def computeHull(points):
 	# if len(points) > 25000:
 	# 	return 0
-	points = insertion_sort(points)
+	pointlen = len(points) - 1
+	points = quickSort(points, 0, pointlen)
 	points = computeHelper(points)
 	# points = naiveHull(points)
 	#clockwiseSort(points)
@@ -129,6 +130,28 @@ def insertion_sort(arr):
 		arr[pos] = cursor
 
 	return arr
+
+def quickSort(arr, low, high):
+	if low < high:
+
+		pi = quickPart(arr, low, high)
+
+		quickSort(arr, low, pi - 1)
+		quickSort(arr, pi + 1, high)
+	return arr
+
+def quickPart(arr, low, high):
+	i = low - 1
+	pivot = arr[high]
+
+	for j in range(low, high):
+		if arr[j][0] <= pivot[0]:
+			i += 1
+			arr[i],arr[j] = arr[j],arr[i]
+
+	arr[i+1],arr[high] = arr[high],arr[i+1]
+
+	return (i+1)
 
 def mergeHulls(left, right):
 

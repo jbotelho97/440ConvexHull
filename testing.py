@@ -2,7 +2,7 @@
 
 import sys
 from random import randint
-from convexhull import computeHull, insertion_sort
+from convexhull import computeHull, insertion_sort, quickSort
 
 
 # argv takes a number randomly generates that many points
@@ -22,13 +22,14 @@ def main():
     # numGen = len(points)
 
     for i in range(numGen):
-        randX = randint(0, 1000)
-        randY = randint(0, 800)
-        temp = [randX, randY]
+        randX = randint(0, 10000000)
+        randY = randint(0, 10000000)
+        temp = (randX, randY)
         points.append(temp)
 
 
     answers = computeHull(points)
+    # answers = quickSort(points,0,(numGen - 1))
 
     # for i in range(len(answers)):
     #     print("X: ", answers[i][0], " Y: ", answers[i][1], "\n")
