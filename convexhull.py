@@ -14,6 +14,10 @@ with the line segment (x,y3)->(x,y4)
 def yint(p1, p2, x, y3, y4):
 	x1, y1 = p1
 	x2, y2 = p2
+	if x1 == x2:
+		yr = ((y1 + y2) / 2)
+		xr = x1
+		return (xr, yr)
 	x3 = x
 	x4 = x
 	px = ((x1*y2 - y1*x2) * (x3 - x4) - (x1 - x2)*(x3*y4 - y3*x4)) / \
@@ -141,6 +145,11 @@ def mergeHulls(left, right):
 			ri = i
 
 	divder = (leftMax + rightMin) / 2
+
+	#Checking if edge points have the same x-value
+	def compare(lefti, righti):
+		return left[lefti] == right[righti]
+
 
 	#Uppoer Tangent
 	indexL = li
