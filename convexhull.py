@@ -26,7 +26,7 @@ def yint(p1, p2, x, y3, y4):
 		 float((x1 - x2)*(y3 - y4) - (y1 - y2)*(x3 - x4))
 	py = ((x1*y2 - y1*x2)*(y3-y4) - (y1 - y2)*(x3*y4 - y3*x4)) / \
 			float((x1 - x2)*(y3 - y4) - (y1 - y2)*(x3-x4))
-	return (px, py)
+	return py
 
 '''
 Given three points a,b,c,
@@ -85,9 +85,8 @@ Replace the implementation of computeHull with a correct computation of the conv
 using the divide-and-conquer algorithm
 '''
 def computeHull(points):
-	# points = insertion_sort(points)
-	# points = computeHelper(points)
-	points = naiveHull(points)
+	points = computeHelper(points)
+	# points = naiveHull(points)
 	clockwiseSort(points)
 	return points
 
@@ -139,7 +138,8 @@ def mergeHulls(left, right):
 	for i in range(len(left)):
 		if left[i][0] > leftMax:
 			leftMax = left[i][0]
-			li = i
+			li = i #index of highist x-value of left list
+
 
 	#Finding the furthest left value of the right list
 	rightMin = 1000  # Maximum x-value of the left
@@ -147,74 +147,92 @@ def mergeHulls(left, right):
 	for i in range(len(right)):
 		if right[i][0] < rightMin:
 			rightMin = right[i][0]
-			ri = i
-
-	divder = (leftMax + rightMin) / 2
-
-	#Checking if edge points have the same x-value
-	def compare(lefti, righti):
-		return left[lefti] == right[righti]
+			ri = i#index of the lowest x-value of the right list
 
 
-	#Uppoer Tangent
+	divder = (leftMax + rightMin) / 2 #Line L to calculate the y-intercept
+
+	# #Checking if edge points have the same x-value
+	# def compare(lefti, righti):
+	# 	return left[lefti] == right[righti]
+
+
+	# #Upoer Tangent
+	# indexL = li
+	# indexR = ri
+	# done = False
+	# upperT = yint(left[indexL], right[indexR], divder, 0, 800)
+	# upperT = upperT[1]
+	# while not done:
+	# 	startR = indexR
+	# 	startL = indexL
+	# 	indexR = (indexR + 1) % rightSize
+	# 	tempBound = yint(left[indexL], right[indexR], divder, 0, 800)
+	# 	if upperT >= tempBound[1]:
+	# 		upperT = tempBound[1]
+	# 	else:
+	# 		indexR = (indexR - 1) % rightSize
+	#
+	# 	indexL = (indexL - 1) % leftSize
+	# 	tempBound = yint(left[indexL], right[indexR], divder, 0, 800)
+	# 	if upperT >= tempBound[1]:
+	# 		upperT = tempBound[1]
+	# 	else:
+	# 		indexL = (indexL + 1) % leftSize
+	#
+	# 	#End-Case: if the loop has gone through with no changes to the indeicies
+	# 	if startL == indexL and startR == indexR:
+	# 		done = True
+	#
+	# upperL = indexL
+	# upperR = indexR
+	#
+	# #Lower Tangent
+	# indexL = li
+	# indexR = ri
+	# done = False
+	# lowerT = yint(left[indexL], right[indexR], divder, 0, 800)
+	# lowerT = lowerT[1]
+	# while not done:
+	# 	startR = indexR
+	# 	startL = indexL
+	# 	indexR = (indexR - 1) % rightSize
+	# 	tempBound = yint(left[indexL], right[indexR], divder, 0, 800)
+	# 	if lowerT <= tempBound[1]:
+	# 		lowerT = tempBound[1]
+	# 	else:
+	# 		indexR = (indexR + 1) % rightSize
+	#
+	# 	indexL = (indexL + 1) % leftSize
+	# 	tempBound = yint(left[indexL], right[indexR], divder, 0, 800)
+	# 	if lowerT <= tempBound[1]:
+	# 		lowerT = tempBound[1]
+	# 	else:
+	# 		indexL = (indexL - 1) % leftSize
+	#
+	# 	# End-Case: if the loop has gone through with no changes to the indeicies
+	# 	if startL == indexL and startR == indexR:
+	# 		done = True
+	#
+	# lowerL = indexL
+	# lowerR = indexR
+
+	#upper tangent
 	indexL = li
 	indexR = ri
-	done = False
-	upperT = yint(left[indexL], right[indexR], divder, 0, 800)
-	upperT = upperT[1]
-	while not done:
-		startR = indexR
-		startL = indexL
-		indexR = (indexR + 1) % rightSize
-		tempBound = yint(left[indexL], right[indexR], divder, 0, 800)
-		if upperT >= tempBound[1]:
-			upperT = tempBound[1]
-		else:
-			indexR = (indexR - 1) % rightSize
+	clockwiseSort(left)
+	clockwiseSort(right)
 
-		indexL = (indexL - 1) % leftSize
-		tempBound = yint(left[indexL], right[indexR], divder, 0, 800)
-		if upperT >= tempBound[1]:
-			upperT = tempBound[1]
-		else:
-			indexL = (indexL + 1) % leftSize
-
-		#End-Case: if the loop has gone through with no changes to the indeicies
-		if startL == indexL and startR == indexR:
-			done = True
-
-	upperL = indexL
-	upperR = indexR
-
-	#Lower Tangent
-	indexL = li
-	indexR = ri
-	done = False
-	lowerT = yint(left[indexL], right[indexR], divder, 0, 800)
-	lowerT = lowerT[1]
-	while not done:
-		startR = indexR
-		startL = indexL
-		indexR = (indexR - 1) % rightSize
-		tempBound = yint(left[indexL], right[indexR], divder, 0, 800)
-		if lowerT <= tempBound[1]:
-			lowerT = tempBound[1]
-		else:
+	while yint(left[indexL], right[(indexR + 1) % rightSize], divder, 0, 800) < yint(left[indexL], right[indexR], divder, 0, 800) or \
+			yint(left[(indexL - 1) % leftSize], right[indexR], divder, 0, 800) < yint(left[indexL], right[indexR], divder, 0, 800):
+		if yint(left[indexL], right[(indexR + 1) % rightSize], divder, 0, 800) < yint(left[indexL], right[indexR], divder, 0, 800):
 			indexR = (indexR + 1) % rightSize
-
-		indexL = (indexL + 1) % leftSize
-		tempBound = yint(left[indexL], right[indexR], divder, 0, 800)
-		if lowerT <= tempBound[1]:
-			lowerT = tempBound[1]
 		else:
 			indexL = (indexL - 1) % leftSize
 
-		# End-Case: if the loop has gone through with no changes to the indeicies
-		if startL == indexL and startR == indexR:
-			done = True
 
-	lowerL = indexL
-	lowerR = indexR
+	upperL = indexL
+	upperR = indexR
 
 	combinedHull = []
 
@@ -241,35 +259,27 @@ def mergeHulls(left, right):
 #Simple naive brute force sort when n = 5
 def naiveHull(points):
 	p = points;
-	clockwiseSort(p);
+	# clockwiseSort(p);
+	listl = len(p)
 
 	hull = [];
 
 	for i in range(len(p)):
-		jStart = (i + 1) % len(p);
-		for j in range(jStart, len(p)):
-			k = (j + 1) % len(p);
-			test = 0
-			for c in range(len(p)):
-				if k == i or k == j:
-					k = (k + 1) % len(p);
-					continue
-				#comp = triangleArea(p[i], p[j], p[k])
-				colin = collinear(p[i], p[j], p[k])
-				clock = cw(p[i],p[j],p[k])
-				if clock:
-					test += 1
-				elif not clock:
-					test -= 1;
-				else:
-					if test >= 0:
-						test += 1
-					else:
-						test -= 1
-				k = (k + 1) % len(p);
-			if abs(test) == (len(p) - 2):
+		j = (i + 1) % listl
+		while j != i:
+			k = (j + 1) % listl
+			for count in range(listl - 2): #does n-2 comparisons checking if all points are on the side of line
+				if k == i:
+					k = (k + 1) % listl
+				cwR = cw(p[i], p[j], p[k])
+				if not cwR:
+					break
+				k = (k + 1) % listl
+			if cwR:
 				hull.append(p[i])
 				break
+			j = (j + 1) % listl
+
 	return hull;
 
 def checkHull(hull, points):
