@@ -16,16 +16,19 @@ with the line segment (x,y3)->(x,y4)
 def yint(p1, p2, x, y3, y4):
 	x1, y1 = p1
 	x2, y2 = p2
-	if x1 == x2:
-		yr = ((y1 + y2) / 2)
-		return yr
+	# #stopgap
+	# if x1 == x2:
+	# 	yr = ((y1 + y2) / 2)
+	# 	return yr
+	#
 	x3 = x
 	x4 = x
 	px = ((x1*y2 - y1*x2) * (x3 - x4) - (x1 - x2)*(x3*y4 - y3*x4)) / \
 		 float((x1 - x2)*(y3 - y4) - (y1 - y2)*(x3 - x4))
 	py = ((x1*y2 - y1*x2)*(y3-y4) - (y1 - y2)*(x3*y4 - y3*x4)) / \
 			float((x1 - x2)*(y3 - y4) - (y1 - y2)*(x3-x4))
-	return int(py)
+	# print("[", x1, ",",y1,"] , [",x2,",",y2,"] = ", py)
+	return py
 
 '''
 Given three points a,b,c,
@@ -177,25 +180,30 @@ def mergeHulls(left, right):
 	#upper tangent
 	indexL = li
 	indexR = ri
+	
+	ymin = -100000000
+	ymax = -ymin
 
+	# print("Star indexL :", indexL, " indexR: ", indexR)
 
-	while yint(left[indexL], right[(indexR + 1) % rightSize], divder, 0, 800) < yint(left[indexL], right[indexR], divder, 0, 800) or \
-			yint(left[(indexL - 1) % leftSize], right[indexR], divder, 0, 800) < yint(left[indexL], right[indexR], divder, 0, 800):
-		if yint(left[indexL], right[(indexR + 1) % rightSize], divder, 0, 800) < yint(left[indexL], right[indexR], divder, 0, 800):
+	while (yint(left[indexL], right[(indexR + 1) % rightSize], divder, ymin, ymax) < yint(left[indexL], right[indexR], divder, ymin, ymax)) or \
+			(yint(left[(indexL - 1) % leftSize], right[indexR], divder, ymin, ymax) < yint(left[indexL], right[indexR], divder, ymin, ymax)):
+		if yint(left[indexL], right[(indexR + 1) % rightSize], divder, ymin, ymax) < yint(left[indexL], right[indexR], divder, ymin, ymax):
 			indexR = (indexR + 1) % rightSize
+			# print("Increased indR to: ", indexR)
 		else:
 			indexL = (indexL - 1) % leftSize
-
+			# print("Increased indL to: ", indexL)
 
 	upperL = indexL
 	upperR = indexR
-
+	# print("Upper Bound Found! \n")
 	indexL = li
 	indexR = ri
 
-	while yint(left[indexL], right[(indexR - 1) % rightSize], divder, 0, 800) > yint(left[indexL], right[indexR], divder, 0, 800) or \
-			yint(left[(indexL + 1) % leftSize], right[indexR], divder, 0, 800) > yint(left[indexL], right[indexR], divder, 0, 800):
-		if yint(left[indexL], right[(indexR - 1) % rightSize], divder, 0, 800) > yint(left[indexL], right[indexR], divder, 0, 800):
+	while yint(left[indexL], right[(indexR - 1) % rightSize], divder, ymin, ymax) > yint(left[indexL], right[indexR], divder, ymin, ymax) or \
+			yint(left[(indexL + 1) % leftSize], right[indexR], divder, ymin, ymax) > yint(left[indexL], right[indexR], divder, ymin, ymax):
+		if yint(left[indexL], right[(indexR - 1) % rightSize], divder, ymin, ymax) > yint(left[indexL], right[indexR], divder, ymin, ymax):
 			indexR = (indexR - 1) % rightSize
 		else:
 			indexL = (indexL + 1) % leftSize
