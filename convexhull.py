@@ -16,19 +16,13 @@ with the line segment (x,y3)->(x,y4)
 def yint(p1, p2, x, y3, y4):
 	x1, y1 = p1
 	x2, y2 = p2
-	# #stopgap
-	# if x1 == x2:
-	# 	yr = ((y1 + y2) / 2)
-	# 	return yr
-	#
 	x3 = x
 	x4 = x
 	px = ((x1*y2 - y1*x2) * (x3 - x4) - (x1 - x2)*(x3*y4 - y3*x4)) / \
 		 float((x1 - x2)*(y3 - y4) - (y1 - y2)*(x3 - x4))
 	py = ((x1*y2 - y1*x2)*(y3-y4) - (y1 - y2)*(x3*y4 - y3*x4)) / \
 			float((x1 - x2)*(y3 - y4) - (y1 - y2)*(x3-x4))
-	# print("[", x1, ",",y1,"] , [",x2,",",y2,"] = ", py)
-	return py
+	return py #Since we only use the y-value from yint() i removed the x-value return
 
 '''
 Given three points a,b,c,
@@ -87,42 +81,49 @@ Replace the implementation of computeHull with a correct computation of the conv
 using the divide-and-conquer algorithm
 '''
 def computeHull(points):
-	pointlen = len(points) - 1
-	points = quickSort(points, 0, pointlen)
+	pointlen = len(points) - 1 #Used for quicksort
+	points = quickSort(points, 0, pointlen) #Sorts by x-value
+	# The helper recursion function, we dont want to keep calling quicksort so we  do this in another method
 	points = computeHelper(points)
-	# points = naiveHull(points)
 	clockwiseSort(points)
 	return points
 
+#The main function recurses until we reach the base case of n<=5 then brute forces the small hulls
+# and merges the bigger hulls
 def computeHelper(points):
 
-
+	#Base Case
 	if len(points) <= 5:
 		return naiveHull(points)
 
 	left = []
 	right = []
 
-	# split = int(len(points) / 2)
-	#
-	# for i in range(split):
-	# 	left.append(points[i])
-	#
-	# for j in range(split, len(points)):
-	# 	right.append(points[j])
-
+	#We find the mean x-value of the points and then use that to sort the values in points into two lists
+	#We do this so two lists don't contain a points with the same x-value
 	mean = (points[0][0] + points[len(points) - 1][0]) / 2
+
+	#Work-in-progress on an edge case where one part of the list is just a straight vertical line
+	if points[0][0] == points[len(points) - 1][0]:
+		return points
+
+	#While there is still points for the loops to loop through it will compare them to the mean
+	# if they are less then or equal to the mean they go in the left list, otherwise the go in the right list
 	for i in range(len(points)):
 		if points[i][0] <= mean:
 			left.append(points[i])
 		else:
 			right.append(points[i])
-
+	#recursive step
 	left = computeHelper(left)
 	right = computeHelper(right)
 
+	#After recursion we begin merging
 	return mergeHulls(left, right)
 
+#Quicksort Algorithm slighty tweeked to work with out list of tuples. I took this off a website and mad eit work for our tuples
+# https://www.geeksforgeeks.org/python-program-for-quicksort/ <- Source for the code
+#It is only called once in the entire program at the begining, we just need sorting to do the splits
 def quickSort(arr, low, high):
 	if low < high:
 
@@ -131,7 +132,7 @@ def quickSort(arr, low, high):
 		quickSort(arr, low, pi - 1)
 		quickSort(arr, pi + 1, high)
 	return arr
-
+#partition for quicksort
 def quickPart(arr, low, high):
 	i = low - 1
 	pivot = arr[high]
@@ -144,21 +145,32 @@ def quickPart(arr, low, high):
 	arr[i+1],arr[high] = arr[high],arr[i+1]
 
 	return (i+1)
-
+#modular addition
+def moda(a, size):
+	return (a + 1) % size
+#modular subtraction
+def mods(a, size):
+	return (a - 1) % size
+#the meat of the program, this merges two convex hulls into a singular one
 def mergeHulls(left, right):
 
+	#This came up in tests but if one list is empty we return the other list
 	if len(left) == 0:
 		return right
 	if len(right) == 0:
 		return left
+
+	#These hold the length of the left and right lists
 	leftSize = len(left)
 	rightSize = len(right)
 
+	#A clockwise sort to get them in clockwise order(although as Prof. Daniels pointed out this actually sorts in
+	#counter-clockwise order
 	clockwiseSort(left)
 	clockwiseSort(right)
 
 	#Finding the furthest right value in the left list
-	leftMax = 0 #Maximum x-value of the left
+	leftMax = left[0][0] #Maximum x-value of the left
 	li = 0 #Index of said maximum
 	for i in range(len(left)):
 		if left[i][0] > leftMax:
@@ -167,7 +179,7 @@ def mergeHulls(left, right):
 
 
 	#Finding the furthest left value of the right list
-	rightMin = 1000  # Maximum x-value of the left
+	rightMin = right[0][0]  # Maximum x-value of the left
 	ri = 0  # Index of said maximum
 	for i in range(len(right)):
 		if right[i][0] < rightMin:
@@ -177,56 +189,75 @@ def mergeHulls(left, right):
 
 	divder = (leftMax + rightMin) / 2 #Line L to calculate the y-intercept
 
-	#upper tangent
-	indexL = li
-	indexR = ri
-	
-	ymin = -100000000
+	#Values for yint
+	ymin = -100000000 #This number might need to be bigger if you are dealing with over 100,000,000 entries
 	ymax = -ymin
 
-	# print("Star indexL :", indexL, " indexR: ", indexR)
+	#Upper Tangent
+	indexL = li #Sets the index to the rightmost point in the left list
+	indexR = ri #Sets the index to the leftmost point in the right list
+	done = False
+	#Invarient: While list is not done we will continue to move the left index counter clockwise and the right index clockwise
+	#until the upper tangent is found
+	#Maintenence: We check that when the loop is iterated through the values of indexL and indexR are actually changing
+	#Termination: Upper bound has been found, values of indexL and indexR won't change so the loop will terminate
+	while not done:
+		startL = indexL
+		startR = indexR
+		while yint(left[mods(indexL, leftSize)], right[indexR], divder, ymin, ymax) < yint(left[indexL], right[indexR], divder, ymin, ymax):
+			indexL = mods(indexL, leftSize)
+		while yint(left[indexL], right[moda(indexR, rightSize)], divder, ymin, ymax) < yint(left[indexL], right[indexR], divder, ymin, ymax):
+			indexR = moda(indexR, rightSize)
+		if startL == indexL and startR == indexR: #If the values have not changes through a loop iteration, terminate
+			done = True
 
-	while (yint(left[indexL], right[(indexR + 1) % rightSize], divder, ymin, ymax) < yint(left[indexL], right[indexR], divder, ymin, ymax)) or \
-			(yint(left[(indexL - 1) % leftSize], right[indexR], divder, ymin, ymax) < yint(left[indexL], right[indexR], divder, ymin, ymax)):
-		if yint(left[indexL], right[(indexR + 1) % rightSize], divder, ymin, ymax) < yint(left[indexL], right[indexR], divder, ymin, ymax):
-			indexR = (indexR + 1) % rightSize
-			# print("Increased indR to: ", indexR)
-		else:
-			indexL = (indexL - 1) % leftSize
-			# print("Increased indL to: ", indexL)
-
+	#Stores the index of the upper bound
 	upperL = indexL
 	upperR = indexR
-	# print("Upper Bound Found! \n")
+
+	#Reset indexL and indexR so we can do the same loop but for the lower bound
 	indexL = li
 	indexR = ri
+	# Invarient: While list is not done we will continue to move the left index clockwise and the right index counter-clockwise
+	# until the lower tangent is found
+	# Maintenence: We check that when the loop is iterated through the values of indexL and indexR are actually changing
+	# Termination: Lower bound has been found, values of indexL and indexR won't change so the loop will terminate
+	done = False
+	while not done:
+		startL = indexL
+		startR = indexR
+		while yint(left[moda(indexL, leftSize)], right[indexR], divder, ymin, ymax) > yint(left[indexL], right[indexR], divder, ymin, ymax):
+			indexL = moda(indexL, leftSize)
+		while yint(left[indexL], right[mods(indexR, rightSize)], divder, ymin, ymax) > yint(left[indexL], right[indexR], divder, ymin, ymax):
+			indexR = mods(indexR, rightSize)
+		if startL == indexL and startR == indexR:
+			done = True
 
-	while yint(left[indexL], right[(indexR - 1) % rightSize], divder, ymin, ymax) > yint(left[indexL], right[indexR], divder, ymin, ymax) or \
-			yint(left[(indexL + 1) % leftSize], right[indexR], divder, ymin, ymax) > yint(left[indexL], right[indexR], divder, ymin, ymax):
-		if yint(left[indexL], right[(indexR - 1) % rightSize], divder, ymin, ymax) > yint(left[indexL], right[indexR], divder, ymin, ymax):
-			indexR = (indexR - 1) % rightSize
-		else:
-			indexL = (indexL + 1) % leftSize
-
+	#Holds the indicies of the lower bound
 	lowerL = indexL
 	lowerR = indexR
 
-	combinedHull = []
+	combinedHull = []#holds the combined hull
 
 	#Combining Lists
 	#left list
+	#Invariant: While ine index has not reached the variable lowerL, all points it goes over are in the hull
+	#Maintenence: We decrease the index to move counter-clockwise through the list checking every time that it is not lowerL
+	#Termination: We reach lowerL meaning all further points are no longer in the hull
 	ind = upperL
 	combinedHull.append(left[upperL])
-	while ind != lowerL:
+	while ind != lowerL:#This will go through the list counter-clockwise until it reaches the lower tangent on the left list
 		ind = (ind - 1) % leftSize
 		combinedHull.append(left[ind])
 	#right List
+	#Invariant: While ine index has not reached the variable upperR, all points it goes over are in the hull
+	#Maintenence: We decrease the index to move counter-clockwise through the list checking every time that it is not upperR
+	#Termination: We reach upperR meaning all further points are no longer in the hull
 	ind = lowerR
 	combinedHull.append(right[lowerR])
-	while ind != upperR:
+	while ind != upperR: #This will go through the list counter-clockwise until it reaches the upper tangent on the right list
 		ind = (ind - 1) % rightSize
 		combinedHull.append(right[ind])
-
 	return combinedHull
 
 #Simple naive brute force sort when n = 5
@@ -234,31 +265,40 @@ def naiveHull(points):
 	p = points;
 	listl = len(p)
 
-	if listl <= 3:
+	if listl <= 3: #Any three or less points will always constitute the hull
 		return points
 
 	hull = [];
-
+	#Invariant: While there exists an element in list p that has not been tested to see if itis on the hull yet, the
+	# loop will continue
+	#Maintenence: The loop will increment up the list checking every single element
+	#Termination: When the end of the list is reached every element will have been tested to see if it is on the hull
 	for i in range(len(p)):
 		j = (i + 1) % listl
+		#Invariant: While there a exists a line segment (i,j) that has not been tested to see if all points lie to one side of it
+		# the loop will continue checking all possible line segments
+		#Maintenence: The loop will modularly increment j while making sure it is not equal to i
+		#Termination: All possible combinations of (i,j) have been tested and the point i is either in the hull or not
 		while j != i:
 			k = (j + 1) % listl
 			for count in range(listl - 2): #does n-2 comparisons checking if all points are on the side of line
 				if k == i:
 					k = (k + 1) % listl
-				cwR = cw(p[i], p[j], p[k])
+				cwR = cw(p[i], p[j], p[k]) #True is those three points form a clockwise motion
 				if not cwR:
-					cwR = collinear(p[i], p[j], p[k])
-					if not cwR:
-						break
+					cwR = collinear(p[i], p[j], p[k])#checks if those points are colinear
+					if not cwR:#This means the points tested are clockwise
+						break#If they are clockwise we move to the next line segment
 				k = (k + 1) % listl
 			if cwR:
-				hull.append(p[i])
+				hull.append(p[i])#If all points can be found clockwise to some point and line segment add to hull
 				break
 			j = (j + 1) % listl
 
 	return hull;
 
+
+#Testing Function
 def checkHull(hull, points):
 	points = naiveHull(points)
 	same = True
