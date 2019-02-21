@@ -18,7 +18,6 @@ def yint(p1, p2, x, y3, y4):
 	x2, y2 = p2
 	if x1 == x2:
 		yr = ((y1 + y2) / 2)
-		xr = x1
 		return yr
 	x3 = x
 	x4 = x
@@ -85,51 +84,41 @@ Replace the implementation of computeHull with a correct computation of the conv
 using the divide-and-conquer algorithm
 '''
 def computeHull(points):
-	# if len(points) > 25000:
-	# 	return 0
 	pointlen = len(points) - 1
 	points = quickSort(points, 0, pointlen)
 	points = computeHelper(points)
 	# points = naiveHull(points)
-	#clockwiseSort(points)
+	clockwiseSort(points)
 	return points
 
 def computeHelper(points):
 
+
 	if len(points) <= 5:
 		return naiveHull(points)
-
-	# points = insertion_sort(points)
 
 	left = []
 	right = []
 
-	split = int(len(points) / 2)
+	# split = int(len(points) / 2)
+	#
+	# for i in range(split):
+	# 	left.append(points[i])
+	#
+	# for j in range(split, len(points)):
+	# 	right.append(points[j])
 
-	for i in range(split):
-		left.append(points[i])
-
-	for j in range(split, len(points)):
-		right.append(points[j])
+	mean = (points[0][0] + points[len(points) - 1][0]) / 2
+	for i in range(len(points)):
+		if points[i][0] <= mean:
+			left.append(points[i])
+		else:
+			right.append(points[i])
 
 	left = computeHelper(left)
 	right = computeHelper(right)
 
 	return mergeHulls(left, right)
-
-def insertion_sort(arr):
-	for i in range(len(arr)):
-		cursor = arr[i]
-		pos = i
-
-		while pos > 0 and arr[pos - 1][0] > cursor[0]:
-			# Swap the number down the list
-			arr[pos] = arr[pos - 1]
-			pos = pos - 1
-		# Break and do the final swap
-		arr[pos] = cursor
-
-	return arr
 
 def quickSort(arr, low, high):
 	if low < high:
@@ -230,17 +219,15 @@ def mergeHulls(left, right):
 		ind = (ind - 1) % rightSize
 		combinedHull.append(right[ind])
 
-	# combinedHull = clockwiseSort(combinedHull)
-
-	# print("Size: ", len(combinedHull), "\n")
-
 	return combinedHull
 
 #Simple naive brute force sort when n = 5
 def naiveHull(points):
 	p = points;
-	# clockwiseSort(p);
 	listl = len(p)
+
+	if listl <= 3:
+		return points
 
 	hull = [];
 
@@ -253,7 +240,8 @@ def naiveHull(points):
 					k = (k + 1) % listl
 				cwR = cw(p[i], p[j], p[k])
 				if not cwR:
-					if not collinear(p[i], p[j], p[k]):
+					cwR = collinear(p[i], p[j], p[k])
+					if not cwR:
 						break
 				k = (k + 1) % listl
 			if cwR:
@@ -266,9 +254,11 @@ def naiveHull(points):
 def checkHull(hull, points):
 	points = naiveHull(points)
 	same = True
-	points = insertion_sort(points)
-	hull = insertion_sort(hull)
-	assert(len(points) == len(hull))
+	clockwiseSort(points)
+	clockwiseSort(hull)
+	if len(points) != len(hull):
+		print("Hull: ", len(hull), " Naive: ", len(points), "\n")
+		return False
 	for i in range(len(points)):
 		if hull[i][0] != points[i][0] or hull[i][1] != points[i][1]:
 			same = False
